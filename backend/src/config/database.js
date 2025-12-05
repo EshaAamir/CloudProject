@@ -9,7 +9,17 @@ const sequelize = new Sequelize(
     host: process.env.DB_HOST,
     port: process.env.DB_PORT || 5432,
     dialect: 'postgres',
+
+    // ✅ REQUIRED for AWS RDS
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    },
+
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
+
     pool: {
       max: 5,
       min: 0,
@@ -19,27 +29,23 @@ const sequelize = new Sequelize(
   }
 );
 
-// Test connection
+// ✅ Test connection
 const connectDB = async () => {
   try {
     await sequelize.authenticate();
     console.log('✅ Database connection established successfully.');
-    
-    // Sync models (use { force: false, alter: true } for development)
-    // In production, use migrations instead of sync
+
     if (process.env.NODE_ENV === 'development') {
       await sequelize.sync({ alter: true });
       console.log('✅ Database models synchronized.');
     } else {
-      // In production, just verify tables exist
-      // Tables should be created via migrations or manual SQL
-      console.log('ℹ️  Production mode: Skipping auto-sync. Ensure tables exist.');
+      console.log('ℹ️  Production mode: Skipping auto-sync.');
     }
+
   } catch (error) {
-    console.error('❌ Unable to connect to the database:', error);
+    console.error('❌ Unable to connect to database:', error.original || error);
     process.exit(1);
   }
 };
 
 module.exports = { sequelize, connectDB };
-

@@ -1,14 +1,19 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-
+const AWS = require('aws-sdk');
 const { connectDB } = require('./config/database');
 const User = require('./models/User');
 const Note = require('./models/Note');
 const authRoutes = require('./routes/authRoutes');
 const noteRoutes = require('./routes/noteRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+const s3 = new AWS.S3({
+  region: process.env.AWS_REGION || 'us-east-1' // replace with your bucket region
+});
 
+// Export s3 to use in other modules (optional)
+module.exports.s3 = s3;
 // Set up model associations
 User.hasMany(Note, { foreignKey: 'userId', as: 'notes' });
 Note.belongsTo(User, { foreignKey: 'userId', as: 'user' });
